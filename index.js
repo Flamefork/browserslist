@@ -2,7 +2,7 @@ var path = require('path');
 var e2c  = require('electron-to-chromium/versions');
 var fs   = require('fs');
 
-var caniuse = require('caniuse-db/data.json').agents;
+var caniuse = require('caniuse-db/data.json');
 
 function normalize(versions) {
     return versions.filter(function (version) {
@@ -269,12 +269,19 @@ var loadCountryStatistics = function (country) {
     }
 };
 
-// Will be filled by Can I Use data below
-browserslist.data  = { };
-browserslist.usage = {
-    global: { },
-    custom: null
+var clearData = function () {
+    // Will be filled by Can I Use data below
+    browserslist.data  = { };
+    browserslist.usage = {
+        global: { },
+        custom: null
+    };
+
+    // Aliases to work with joined versions like `ios_saf 7.0-7.1`
+    browserslist.versionAliases = { };
 };
+
+clearData();
 
 // Default browsers query
 browserslist.defaults = [
@@ -302,9 +309,6 @@ browserslist.aliases = {
     firefoxandroid: 'and_ff',
     ucandroid:      'and_uc'
 };
-
-// Aliases to work with joined versions like `ios_saf 7.0-7.1`
-browserslist.versionAliases = { };
 
 // Get browser data by alias or case insensitive name
 browserslist.byName = function (name) {
@@ -620,13 +624,16 @@ browserslist.queries = {
 
 // Get and convert Can I Use data
 
-(function () {
-    for ( var name in caniuse ) {
-        var browser = caniuse[name];
+browserslist.initWithData = function (caniuseData) {
+    clearData();
+
+    var agents = caniuseData.agents;
+    for ( var name in agents ) {
+        var browser = agents[name];
         browserslist.data[name] = {
             name:     name,
-            versions: normalize(caniuse[name].versions),
-            released: normalize(caniuse[name].versions.slice(0, -3))
+            versions: normalize(agents[name].versions),
+            released: normalize(agents[name].versions.slice(0, -3))
         };
         fillUsage(browserslist.usage.global, name, browser.usage_global);
 
@@ -643,6 +650,8 @@ browserslist.queries = {
             }
         }
     }
-}());
+};
+
+browserslist.initWithData(caniuse);
 
 module.exports = browserslist;
