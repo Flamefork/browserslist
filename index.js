@@ -321,12 +321,19 @@ function loadCountryStatistics (country) {
   }
 }
 
-// Will be filled by Can I Use data below
-browserslist.data = { }
-browserslist.usage = {
-  global: { },
-  custom: null
+function clearData () {
+  // Will be filled by Can I Use data below
+  browserslist.data = { }
+  browserslist.usage = {
+    global: { },
+    custom: null
+  }
+
+  // Aliases to work with joined versions like `ios_saf 7.0-7.1`
+  browserslist.versionAliases = { }
 }
+
+clearData()
 
 // Default browsers query
 browserslist.defaults = [
@@ -350,9 +357,6 @@ browserslist.aliases = {
   ucandroid: 'and_uc',
   qqandroid: 'and_qq'
 }
-
-// Aliases to work with joined versions like `ios_saf 7.0-7.1`
-browserslist.versionAliases = { }
 
 // Get browser data by alias or case insensitive name
 function byName (name) {
@@ -815,7 +819,7 @@ function checkExtend (name) {
 
 // Get and convert Can I Use data
 
-(function () {
+function convertData () {
   for (var name in agents) {
     var browser = agents[name]
     browserslist.data[name] = {
@@ -839,6 +843,14 @@ function checkExtend (name) {
       }
     }
   }
-}())
+}
+
+convertData()
+
+browserslist.initWithAgents = function (customAgents) {
+  agents = customAgents
+  clearData()
+  convertData()
+}
 
 module.exports = browserslist
